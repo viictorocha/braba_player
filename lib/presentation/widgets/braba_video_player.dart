@@ -18,8 +18,15 @@ class _BrabaVideoPlayerState extends State<BrabaVideoPlayer> {
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: Container(
-        color: Colors.black,
-        // Aqui o repositório constrói o player real (Youtube)
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [Color(0xFF1C1C1E), Color(0xFF121214)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: _videoRepo.buildPlayer(widget.videoId),
       ),
     );

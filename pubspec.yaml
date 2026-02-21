@@ -39,6 +39,8 @@ dependencies:
   get_it: ^9.2.1
   google_fonts: ^8.0.2
   lucide_icons: ^0.257.0
+  vimeo_video_player: ^1.0.3
+  video_player: ^2.11.0
 
 dev_dependencies:
   flutter_test:

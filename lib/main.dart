@@ -1,18 +1,16 @@
+import 'package:braba_player/domain/repositories/video_repository_impl.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-// Imports da sua arquitetura (Certifique-se que os caminhos estão corretos)
 import 'domain/repositories/video_player_repository.dart';
-import 'domain/repositories/youtube_repository_impl.dart';
-import 'presentation/widgets/braba_video_player.dart';
 
 final getIt = GetIt.instance;
 
 void setupDI() {
   if (!getIt.isRegistered<IVideoPlayerRepository>()) {
     getIt.registerLazySingleton<IVideoPlayerRepository>(
-      () => YoutubeRepositoryImpl(),
+      () => DirectVideoRepositoryImpl(),
     );
   }
 }
@@ -22,7 +20,7 @@ void main() {
   runApp(const BrabaPlayerApp());
 }
 
-// --- DADOS MOCKADOS ---
+// --- MODELO DE DADOS ---
 class Course {
   final String id;
   final String title;
@@ -44,59 +42,34 @@ class Course {
 final List<Course> recentCourses = [
   const Course(
     "1",
-    "Flutter Forward: Strategy & Vision",
-    "Google Tech",
-    "https://images.unsplash.com/photo-1628258334491-904793f1643d?q=80&w=600",
+    "Cinematic Nature",
+    "National Geo Style",
+    "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=600",
     0.85,
-    "un9v_fB6R8A", // Flutter Official - Alta compatibilidade
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   ),
   const Course(
     "2",
-    "The Art of Minimalist Living",
-    "Netflix Design",
-    "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?q=80&w=600",
+    "Abstract Design",
+    "Motion Studio",
+    "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=600",
     0.45,
-    "Ym6fO6V_p7U", // Documentário sobre Design/Minimalismo
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   ),
 ];
 
-final List<Course> categories = [
-  const Course(
-    "3",
-    "UI Design Principles 2024",
-    "Design Course",
-    "https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?q=80&w=600",
-    0.0,
-    "TRf2X4nSPlU", // UI Design
-  ),
-  const Course(
-    "4",
-    "Building Premium Experiences",
-    "Apple Style Guide",
-    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600",
-    0.0,
-    "f7pZ7pYpZ7p", // Placeholder - Tente esse: "7XGIn_v3pS0"
-  ),
-];
-
-// --- APP & TEMA ---
+// --- APP PRINCIPAL ---
 class BrabaPlayerApp extends StatelessWidget {
   const BrabaPlayerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Braba Academy',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        useMaterial3: true,
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF121214),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFE0C097),
-          surface: Color(0xFF1C1C1E),
-          onSurface: Color(0xFFF5F5F5),
-        ),
+        colorScheme: const ColorScheme.dark(primary: Color(0xFFE0C097)),
         textTheme: GoogleFonts.plusJakartaSansTextTheme(
           ThemeData.dark().textTheme,
         ),
@@ -106,7 +79,28 @@ class BrabaPlayerApp extends StatelessWidget {
   }
 }
 
-// --- NAVEGAÇÃO PRINCIPAL ---
+// --- WIDGET DO PLAYER AJUSTADO ---
+class BrabaVideoPlayer extends StatelessWidget {
+  final String videoId;
+  const BrabaVideoPlayer({super.key, required this.videoId});
+
+  @override
+  Widget build(BuildContext context) {
+    // Detecta se a tela está deitada
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
+    return AspectRatio(
+      // Se estiver deitado, o AspectRatio deve ser o da tela inteira, não 16/9 fixo
+      aspectRatio: isLandscape
+          ? MediaQuery.of(context).size.aspectRatio
+          : 16 / 9,
+      child: GetIt.I<IVideoPlayerRepository>().buildPlayer(videoId),
+    );
+  }
+}
+
+// --- HOME PAGE E NAVEGAÇÃO ---
 class RootPage extends StatefulWidget {
   const RootPage({super.key});
   @override
@@ -115,32 +109,25 @@ class RootPage extends StatefulWidget {
 
 class _RootPageState extends State<RootPage> {
   int _currentIndex = 0;
-  final List<Widget> _pages = [
-    const HomePage(),
-    const Center(child: Text("Busca")),
-    const Center(child: Text("Perfil")),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: [
+        const HomePage(),
+        const Center(child: Text("Busca")),
+        const Center(child: Text("Perfil")),
+      ][_currentIndex],
       bottomNavigationBar: NavigationBar(
-        height: 65,
-        backgroundColor: const Color(0xFF121214),
-        indicatorColor: const Color(0xFFE0C097).withOpacity(0.2),
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
             label: 'Início',
           ),
           NavigationDestination(icon: Icon(Icons.search), label: 'Explorar'),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
             label: 'Perfil',
           ),
         ],
@@ -149,36 +136,41 @@ class _RootPageState extends State<RootPage> {
   }
 }
 
-// --- TELA INICIAL (Corrigida) ---
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _buildHeader(),
-          const SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
+          SliverToBoxAdapter(child: const SizedBox(height: 60)),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverToBoxAdapter(
-              // Corrigido: era 'child', agora é 'sliver'
-              child: SectionTitle(title: "Continue Aprendendo"),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Bem-vinda de volta,",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  const Text(
+                    "Karol Sena",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           ),
           SliverToBoxAdapter(
             child: SizedBox(
               height: 250,
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 15,
-                ),
+                padding: const EdgeInsets.all(20),
                 scrollDirection: Axis.horizontal,
                 itemCount: recentCourses.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 16),
-                itemBuilder: (context, index) => ContinueWatchingCard(
-                  course: recentCourses[index],
+                itemBuilder: (context, index) => GestureDetector(
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -186,25 +178,24 @@ class HomePage extends StatelessWidget {
                           CoursePlayerPage(course: recentCourses[index]),
                     ),
                   ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            recentCourses[index].image,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        recentCourses[index].title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-          const SliverPadding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-            sliver: SliverToBoxAdapter(
-              // Corrigido: era 'child', agora é 'sliver'
-              child: SectionTitle(title: "Para sua Carreira"),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverList(
-              // Corrigido: era 'child', agora é 'sliver'
-              delegate: SliverChildBuilderDelegate(
-                (context, index) =>
-                    CompactCourseCard(course: categories[index]),
-                childCount: categories.length,
               ),
             ),
           ),
@@ -212,313 +203,81 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildHeader() {
-    return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-      sliver: SliverToBoxAdapter(
-        // Corrigido: era 'child', agora é 'sliver'
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Bem-vinda de volta,",
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                Text(
-                  "Victoria Rocha",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            _SafeImage(
-              url: 'https://i.pravatar.cc/150?img=9',
-              radius: 24,
-              width: 48,
-              height: 48,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
-// --- TELA DE PLAYER (SUBSTITUA AS DUAS VERSÕES POR ESTA) ---
+// --- TELA DE PLAYER REVISADA ---
 class CoursePlayerPage extends StatelessWidget {
   final Course course;
   const CoursePlayerPage({super.key, required this.course});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          // Header com botão de voltar
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          GetIt.I<IVideoPlayerRepository>().dispose();
+          SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: isLandscape
+            ? BrabaVideoPlayer(
+                key: const ValueKey('video_player_shared'),
+                videoId: course.videoId,
+              )
+            : Column(
                 children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Text(
-                    "Assistindo agora",
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // O Player de Vídeo
-          BrabaVideoPlayer(videoId: course.videoId),
-
-          // Detalhes do Curso
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFF121214),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      course.title,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Com ${course.author}",
-                      style: const TextStyle(
-                        color: Color(0xFFE0C097),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      "Conteúdo do Curso",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Lista de aulas fake
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 5,
-                      itemBuilder: (context, i) => ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          i == 0 ? Icons.play_circle_fill : Icons.lock_outline,
-                          color: i == 0
-                              ? const Color(0xFFE0C097)
-                              : Colors.white24,
-                        ),
-                        title: Text(
-                          "Aula 0${i + 1} - Conceitos Fundamentais",
-                          style: TextStyle(
-                            color: i == 0 ? Colors.white : Colors.white54,
-                            fontSize: 14,
+                  SafeArea(
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new,
+                            color: Colors.white,
                           ),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                        trailing: const Text(
-                          "15:00",
-                          style: TextStyle(color: Colors.white24, fontSize: 12),
+                        const Text(
+                          "Assistindo agora",
+                          style: TextStyle(color: Colors.white70),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-// --- UTILS & COMPONENTES VISUAIS ---
-
-class _SafeImage extends StatelessWidget {
-  final String url;
-  final double? width;
-  final double? height;
-  final double radius;
-
-  const _SafeImage({
-    required this.url,
-    this.width,
-    this.height,
-    this.radius = 0,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: Image.network(
-        url,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          width: width,
-          height: height,
-          color: Colors.white10,
-          child: const Icon(Icons.broken_image_outlined, color: Colors.white24),
-        ),
-      ),
-    );
-  }
-}
-
-class SectionTitle extends StatelessWidget {
-  final String title;
-  const SectionTitle({super.key, required this.title});
-  @override
-  Widget build(BuildContext context) => Text(
-    title,
-    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  );
-}
-
-class ContinueWatchingCard extends StatelessWidget {
-  final Course course;
-  final VoidCallback onTap;
-  const ContinueWatchingCard({
-    super.key,
-    required this.course,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: 260,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  _SafeImage(
-                    url: course.image,
-                    width: double.infinity,
-                    height: double.infinity,
-                    radius: 16,
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.8),
+                  BrabaVideoPlayer(
+                    key: const ValueKey('video_player_shared'),
+                    videoId: course.videoId,
+                  ),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      color: const Color(0xFF121214),
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            course.title,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            "Com ${course.author}",
+                            style: const TextStyle(color: Color(0xFFE0C097)),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  const Center(
-                    child: Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 12,
-                    left: 12,
-                    right: 12,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
-                      child: LinearProgressIndicator(
-                        value: course.progress,
-                        backgroundColor: Colors.white24,
-                        valueColor: const AlwaysStoppedAnimation(
-                          Color(0xFFE0C097),
-                        ),
-                        minHeight: 4,
-                      ),
-                    ),
-                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              course.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class CompactCourseCard extends StatelessWidget {
-  final Course course;
-  const CompactCourseCard({super.key, required this.course});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          _SafeImage(url: course.image, width: 80, height: 80, radius: 10),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  course.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  course.author,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-        ],
       ),
     );
   }

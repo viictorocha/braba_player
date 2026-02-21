@@ -6,19 +6,26 @@ class YoutubeRepositoryImpl implements IVideoPlayerRepository {
   late YoutubePlayerController _controller;
 
   @override
+  @override
   Widget buildPlayer(String videoId) {
-    // Configuramos o player para o estilo "Braba" (M3, sem marca exagerada)
-    _controller = YoutubePlayerController.fromVideoId(
-      videoId: videoId,
-      params: const YoutubePlayerParams(
+    final String currentOrigin = Uri.base.origin;
+
+    _controller = YoutubePlayerController(
+      params: YoutubePlayerParams(
         showControls: true,
         showFullscreenButton: true,
-        strictRelatedVideos: true, // Evita recomendações aleatórias no fim
+        strictRelatedVideos: true,
         mute: false,
+        origin: currentOrigin,
+        enableCaption: true,
+        showVideoAnnotations: false,
       ),
-    );
+    )..loadVideoById(videoId: videoId);
 
-    return YoutubePlayer(controller: _controller, aspectRatio: 16 / 9);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: YoutubePlayer(controller: _controller, aspectRatio: 16 / 9),
+    );
   }
 
   @override
@@ -39,7 +46,6 @@ class YoutubeRepositoryImpl implements IVideoPlayerRepository {
 
   @override
   Stream<bool> get isReadyStream => _controller.videoStateStream.map((_) {
-    // Acessamos o estado diretamente do valor atual do controller
     final s = _controller.value.playerState;
 
     return s == PlayerState.playing ||
