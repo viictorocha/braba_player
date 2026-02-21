@@ -109,7 +109,6 @@ class BrabaPlayerApp extends StatelessWidget {
 // --- NAVEGAÇÃO PRINCIPAL ---
 class RootPage extends StatefulWidget {
   const RootPage({super.key});
-
   @override
   State<RootPage> createState() => _RootPageState();
 }
