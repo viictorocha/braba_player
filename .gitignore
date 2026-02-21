@@ -1,0 +1,67 @@
+# --- Miscellaneous ---
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# --- IntelliJ / Android Studio ---
+*.iml
+*.ipr
+*.iws
+.idea/
+# Excluir configurações locais do Android Studio
+.gradle/
+local.properties
+
+# --- VS Code ---
+# Comentado por padrão, mas recomendado se você trabalha em equipe
+.vscode/
+
+# --- Flutter / Dart / Pub ---
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+/coverage/
+
+# --- Web Related ---
+.web_assets/
+# Se estiver usando o plugin de web do Flutter
+lib/generated_plugin_registrant.dart
+
+# --- Mobile Specific (Crashes & Signing) ---
+# Android
+/android/app/debug
+/android/app/profile
+/android/app/release
+*.keystore
+*.jks
+
+# iOS
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/DerivedData/
+**/Podfile.lock
+
+# --- Symbolication & Obfuscation ---
+app.*.symbols
+app.*.map.json
+
+# --- Environment Variables ---
+.env*
