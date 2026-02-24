@@ -1,3 +1,4 @@
+import 'package:braba_player/presentation/LoginPage.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -73,18 +74,20 @@ class ProfilePage extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // Lista de Opções
-            _buildOptionTile(Icons.person_outline, "Dados Pessoais"),
+            // Lista de Opções - Passando o context para as funções
+            _buildOptionTile(context, Icons.person_outline, "Dados Pessoais"),
             _buildOptionTile(
+              context,
               Icons.workspace_premium_outlined,
               "Minha Assinatura",
             ),
             _buildOptionTile(
+              context,
               Icons.download_for_offline_outlined,
               "Aulas Offline",
             ),
-            _buildOptionTile(Icons.notifications_none, "Notificações"),
-            _buildOptionTile(Icons.help_outline, "Suporte e FAQ"),
+            _buildOptionTile(context, Icons.notifications_none, "Notificações"),
+            _buildOptionTile(context, Icons.help_outline, "Suporte e FAQ"),
 
             const Divider(
               color: Colors.white10,
@@ -94,6 +97,7 @@ class ProfilePage extends StatelessWidget {
             ),
 
             _buildOptionTile(
+              context, // Adicionado context
               Icons.logout,
               "Sair da Conta",
               isDestructive: true,
@@ -137,6 +141,7 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildOptionTile(
+    BuildContext context, // Adicionei o contexto aqui
     IconData icon,
     String title, {
     bool isDestructive = false,
@@ -172,7 +177,16 @@ class ProfilePage extends StatelessWidget {
               color: Colors.white24,
             ),
       onTap: () {
-        // Implementar navegação futura
+        if (isDestructive) {
+          // Remove todas as telas e volta para o login (Segurança)
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        } else {
+          // Outras navegações podem entrar aqui
+        }
       },
     );
   }

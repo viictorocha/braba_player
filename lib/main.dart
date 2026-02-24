@@ -1,5 +1,6 @@
 import 'package:braba_player/domain/repositories/video_repository_impl.dart';
 import 'package:braba_player/presentation/ExplorePage.dart';
+import 'package:braba_player/presentation/LoginPage.dart';
 import 'package:braba_player/presentation/ProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,7 +112,7 @@ class BrabaPlayerApp extends StatelessWidget {
           ThemeData.dark().textTheme,
         ),
       ),
-      home: const RootPage(),
+      home: const LoginPage(),
     );
   }
 }
