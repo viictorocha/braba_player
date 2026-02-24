@@ -1,4 +1,6 @@
 import 'package:braba_player/domain/repositories/video_repository_impl.dart';
+import 'package:braba_player/presentation/ExplorePage.dart';
+import 'package:braba_player/presentation/ProfilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
@@ -58,6 +60,41 @@ final List<Course> recentCourses = [
   ),
 ];
 
+final List<Course> allCourses = [
+  const Course(
+    "1",
+    "Domínio Emocional",
+    "Karol Sena",
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600",
+    0,
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  ),
+  const Course(
+    "2",
+    "Liderança Feminina",
+    "Bruna Costa",
+    "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600",
+    0,
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+  ),
+  const Course(
+    "3",
+    "Estratégias de Carreira",
+    "Clara Mendes",
+    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=600",
+    0,
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+  ),
+  const Course(
+    "4",
+    "Branding Pessoal",
+    "Erika Lima",
+    "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=600",
+    0,
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  ),
+];
+
 // --- APP PRINCIPAL ---
 class BrabaPlayerApp extends StatelessWidget {
   const BrabaPlayerApp({super.key});
@@ -114,8 +151,8 @@ class _RootPageState extends State<RootPage> {
     return Scaffold(
       body: [
         const HomePage(),
-        const Center(child: Text("Busca")),
-        const Center(child: Text("Perfil")),
+        const ExplorePage(),
+        const ProfilePage(),
       ][_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
@@ -138,74 +175,242 @@ class _RootPageState extends State<RootPage> {
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: const SizedBox(height: 60)),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            sliver: SliverToBoxAdapter(
-              child: Column(
+          // Header com saudação
+          SliverAppBar(
+            expandedHeight: 120,
+            floating: true,
+            backgroundColor: const Color(0xFF121214),
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
+              title: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Bem-vinda de volta,",
-                    style: TextStyle(color: Colors.grey),
+                  Text(
+                    "BEM-VINDA AO",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10,
+                      letterSpacing: 2,
+                      color: Colors.grey,
+                    ),
                   ),
-                  const Text(
-                    "Karol Sena",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  Text(
+                    "Braba Academy",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFE0C097),
+                    ),
                   ),
                 ],
               ),
             ),
+            actions: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.notifications_none),
+              ),
+              const SizedBox(width: 10),
+            ],
+          ),
+
+          // Seção: Continuar Assistindo (Horizontal)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+              child: _sectionHeader("Continuar assistindo", showSeeAll: false),
+            ),
           ),
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 250,
-              child: ListView.separated(
-                padding: const EdgeInsets.all(20),
+              height: 200,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
                 itemCount: recentCourses.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 16),
-                itemBuilder: (context, index) => GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          CoursePlayerPage(course: recentCourses[index]),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.network(
-                            recentCourses[index].image,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        recentCourses[index].title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
+                itemBuilder: (context, index) =>
+                    _RecentCourseCard(course: recentCourses[index]),
               ),
             ),
           ),
+
+          // Seção: Catálogo de Cursos (Vertical)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+              child: _sectionHeader("Explorar Formações"),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _CourseListTile(course: allCourses[index]),
+                childCount: allCourses.length,
+              ),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
+      ),
+    );
+  }
+
+  Widget _sectionHeader(String title, {bool showSeeAll = true}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        if (showSeeAll)
+          const Text(
+            "Ver tudo",
+            style: TextStyle(color: Color(0xFFE0C097), fontSize: 12),
+          ),
+      ],
+    );
+  }
+}
+
+// --- COMPONENTES AUXILIARES ---
+
+class _RecentCourseCard extends StatelessWidget {
+  final Course course;
+  const _RecentCourseCard({required this.course});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => CoursePlayerPage(course: course)),
+      ),
+      child: Container(
+        width: 260,
+        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          image: DecorationImage(
+            image: NetworkImage(course.image),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.3),
+              BlendMode.darken,
+            ),
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              bottom: 12,
+              left: 12,
+              right: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    course.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: course.progress,
+                    backgroundColor: Colors.white24,
+                    color: const Color(0xFFE0C097),
+                    minHeight: 3,
+                  ),
+                ],
+              ),
+            ),
+            const Center(
+              child: Icon(
+                Icons.play_circle_fill,
+                size: 40,
+                color: Colors.white70,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// --- TELA DE PLAYER REVISADA ---
+class _CourseListTile extends StatelessWidget {
+  final Course course;
+  const _CourseListTile({required this.course});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => CoursePlayerPage(course: course)),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1C1E),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                course.image,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    course.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Mentora: ${course.author}",
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.white24,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class CoursePlayerPage extends StatelessWidget {
   final Course course;
   const CoursePlayerPage({super.key, required this.course});

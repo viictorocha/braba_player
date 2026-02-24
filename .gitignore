@@ -40,7 +40,6 @@ build/
 # --- Web Related ---
 .web_assets/
 # Se estiver usando o plugin de web do Flutter
-lib/generated_plugin_registrant.dart
 
 # --- Mobile Specific (Crashes & Signing) ---
 # Android

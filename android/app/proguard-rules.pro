@@ -1,0 +1,2 @@
+-keep class com.google.android.exoplayer2.** { *; }
+-keep class io.flutter.plugins.videoplayer.** { *; }
